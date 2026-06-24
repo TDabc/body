@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>身体部位闪卡</title>
+    <style>
+        /* 基础重置与字体设置 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 标题样式 */
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 22px;
+            text-align: center;
+        }
+
+        /* 模式切换按钮组 */
+        .mode-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 320px;
+            justify-content: center;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px 20px;
+            border: 2px solid #4CAF50;
+            background-color: white;
+            color: #4CAF50;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .mode-btn.active {
+            background-color: #4CAF50;
+            color: white;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .mode-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 当前模式提示 */
+        .mode-hint {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            text-align: center;
+            background: #e8f5e9;
+            padding: 6px 16px;
+            border-radius: 12px;
+        }
+
+        /* 卡片网格容器 */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        /* 单个卡片样式 */
+        .card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            aspect-ratio: 3 / 4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .card:active {
+            transform: scale(0.97);
+        }
+
+        .card img {
+            width: 82%;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
+        }
+        
+        /* 音频元素隐藏 */
+        audio {
+            display: none;
+        }
+
+        /* 底部提示 */
+        footer {
+            margin-top: 18px;
+            font-size: 13px;
+            color: #888;
+            text-align: center;
+        }
+
+        /* ========== 首次激活遮罩层样式 ========== */
+        .activation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(3px);
+        }
+
+        .activation-card {
+            background: white;
+            border-radius: 20px;
+            padding: 32px 28px;
+            max-width: 340px;
+            width: 88%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: popIn 0.35s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .activation-card .icon {
+            font-size: 56px;
+            margin-bottom: 12px;
+        }
+
+        .activation-card h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .activation-card p {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .activation-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 36px;
+            border-radius: 26px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .activation-btn:active {
+            background-color: #388E3C;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>身体部位闪卡</h1>
+
+    <!-- 模式切换按钮 -->
+    <div class="mode-selector">
+        <button class="mode-btn active" id="wordModeBtn">单词</button>
+        <button class="mode-btn" id="sentenceModeBtn">句子</button>
+    </div>
+
+    <!-- 当前模式提示 -->
+    <div class="mode-hint" id="modeHint">当前模式：单词</div>
+
+    <!-- 卡片容器 -->
+    <div class="card-grid" id="flashcardContainer"></div>
+
+    <footer>
+        点击图片听发音 · 切换模式听不同音频
+    </footer>
+
+    <!-- ========== 首次激活遮罩层 ========== -->
+    <div class="activation-overlay" id="activationOverlay">
+        <div class="activation-card">
+            <div class="icon">👆</div>
+            <h2>欢迎来到身体部位闪卡</h2>
+            <p>
+                点击下方按钮激活音频播放<br>
+                之后点击任意卡片即可听到发音
+            </p >
+            <button class="activation-btn" id="activateBtn">开始学习</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== 获取 DOM 元素 =====
+        const container = document.getElementById('flashcardContainer');
+        const wordBtn = document.getElementById('wordModeBtn');
+        const sentenceBtn = document.getElementById('sentenceModeBtn');
+        const modeHint = document.getElementById('modeHint');
+        const overlay = document.getElementById('activationOverlay');
+        const activateBtn = document.getElementById('activateBtn');
+
+        let currentMode = 'word';
+        const audioElements = [];
+        let isActivated = false; // 标记是否已激活
+
+        // ===== 生成卡片 =====
+        function generateCards() {
+            container.innerHTML = '';
+            audioElements.length = 0;
+
+            for (let i = 1; i <= 27; i++) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                const img = document.createElement('img');
+                img.src = `${i}.png`; 
+                img.alt = `闪卡 ${i}`;
+                img.loading = 'lazy';
+
+                const audio = document.createElement('audio');
+                audio.preload = 'auto';
+                audio.src = `${i}a.mp3`;
+                audio.id = `audio-${i}`;
+                audioElements.push(audio);
+
+                // 点击播放音频（但需要先激活）
+                card.addEventListener('click', () => {
+                    if (!isActivated) {
+                        showActivationNotice();
+                        return;
+                    }
+                    audio.currentTime = 0;
+                    audio.play().catch(e => console.log("Audio play failed:", e));
+                });
+
+                card.appendChild(img);
+                card.appendChild(audio);
+                container.appendChild(card);
+            }
+        }
+
+        // ===== 切换模式 =====
+        function setMode(mode) {
+            currentMode = mode;
+            
+            if (mode === 'word') {
+                wordBtn.classList.add('active');
+                sentenceBtn.classList.remove('active');
+                modeHint.textContent = '当前模式：单词';
+            } else {
+                sentenceBtn.classList.add('active');
+                wordBtn.classList.remove('active');
+                modeHint.textContent = '当前模式：句子';
+            }
+
+            for (let i = 0; i < audioElements.length; i++) {
+                const index = i + 1;
+                if (mode === 'word') {
+                    audioElements[i].src = `${index}a.mp3`;
+                } else {
+                    audioElements[i].src = `${index}.mp3`;
+                }
+            }
+        }
+
+        // ===== 显示激活提示（如果用户未激活就点击卡片） =====
+        function showActivationNotice() {
+            overlay.style.display = 'flex';
+        }
+
+        // ===== 激活函数 =====
+        function activatePage() {
+            isActivated = true;
+            overlay.style.display = 'none';
+            // 尝试播放一段静音音频来真正激活微信的音频上下文
+            const silentAudio = new Audio('data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoAAACAgICAAIAAgACA'); // 极短的静音wav
+            silentAudio.play().then(() => {
+                silentAudio.pause();
+            }).catch(() => {
+                // 静音音频也可能被拦截，没关系，用户后续点击卡片时依然会走 play()
+            });
+        }
+
+        // ===== 事件绑定 =====
+        wordBtn.addEventListener('click', () => setMode('word'));
+        sentenceBtn.addEventListener('click', () => setMode('sentence'));
+
+        // 点击"开始学习"按钮激活
+        activateBtn.addEventListener('click', activatePage);
+
+        // 点击遮罩层背景（非按钮区域）不关闭，防止误触
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                // 不做关闭，只允许通过按钮关闭
+            }
+        });
+
+        // ===== 初始化 =====
+        generateCards();
+    </script>
+</body>
+</html>
